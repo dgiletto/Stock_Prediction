@@ -19,5 +19,5 @@ def forecast_7_day(ticker):
 
     next_days = np.arange(len(data), len(data) + 7).reshape(-1, 1)
     forecast = model.predict(next_days)
-    return [{"day": int(day[0]), "price": round(float(price), 2)}
+    return [{"day": int(day[0]), "price": round(float(np.squeeze(price)), 2)}
         for day, price in zip(next_days, forecast)]
