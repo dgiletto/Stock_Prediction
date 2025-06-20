@@ -4,7 +4,9 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 def fetch_stock_data(ticker):
-    data = yf.download(ticker, period="60d", interval="1d")
+    data = yf.download(ticker, period="6mo", interval="1d", auto_adjust=True, progress=False)
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = data.columns.get_level_values(0)
     data = data[["Open", "High", "Low", "Volume", "Close"]].dropna().reset_index()
 
     # Basic Features
@@ -16,7 +18,9 @@ def fetch_stock_data(ticker):
     data["MA_10"] = data["Close"].rolling(window=10).mean()
     data["Volatility_5"] = data["Close"].rolling(window=5).std()
 
-    data = data.dropna().reset_index(drop=True)
+    feature_cols = ["Days", "Open", "High", "Low", "Volume", "Return", "MA_5", "MA_10", "Volatility_5"]
+    data = data.dropna(subset=feature_cols).reset_index(drop=True)
+
     return data
 
 def forecast_7_day(ticker):
@@ -35,7 +39,9 @@ def forecast_7_day(ticker):
     for i in range(1, 8):
         future_row = last_row.copy()
         future_row["Days"] += i
-        forecasts.append(future_row[feature_cols])
+        row_features = {col: future_row[col] for col in feature_cols}
+        forecasts.append(row_features)
+
     
     X_future = pd.DataFrame(forecasts)
     y_pred = model.predict(X_future)
