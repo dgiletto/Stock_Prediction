@@ -34,7 +34,7 @@ def forecast_7_day(ticker):
 
     for i in range(1, 8):
         future_row = last_row.copy()
-        future_row["Days"] += 1
+        future_row["Days"] += i
         forecasts.append(future_row[feature_cols])
     
     X_future = pd.DataFrame(forecasts)
