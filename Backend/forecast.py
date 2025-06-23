@@ -23,7 +23,7 @@ def fetch_stock_data(ticker):
 
     return data
 
-def forecast_7_day(ticker):
+def forecast_30_day(ticker):
     data = fetch_stock_data(ticker)
 
     feature_cols = ["Days", "Open", "High", "Low", "Volume", "Return", "MA_5", "MA_10", "Volatility_5"]
@@ -34,11 +34,28 @@ def forecast_7_day(ticker):
     model.fit(X, y)
 
     last_row = data.iloc[-1].copy()
+    current_day = int(last_row["Days"])
+
+    past_closes = list(data["Close"].tail(10))
     forecasts = []
 
     for i in range(1, 31):
+        current_day += 1
+
+        prev_close = past_closes[-1]
+        simulated_close = prev_close + np.random.normal(0, 1)
+        past_closes.append(simulated_close)
+        if len(past_closes) > 10:
+            past_closes.pop(0)
+        
         future_row = last_row.copy()
-        future_row["Days"] += i
+        future_row["Days"] = current_day
+        future_row["Close"] = simulated_close
+        future_row["Return"] = (simulated_close / prev_close) - 1
+        future_row["MA_5"] = np.mean(past_closes[-5:])
+        future_row["MA_10"] = np.mean(past_closes)
+        future_row["Volatility_5"] = np.std(past_closes[-5:])
+
         row_features = {col: future_row[col] for col in feature_cols}
         forecasts.append(row_features)
 

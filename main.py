@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from Backend.forecast import forecast_7_day
+from Backend.forecast import forecast_30_day
 
 app = FastAPI()
 
@@ -15,7 +15,7 @@ app.add_middleware(
 @app.get("/forecast/{ticker}")
 def get_forecast(ticker: str):
     try:
-        forecast = forecast_7_day(ticker)
+        forecast = forecast_30_day(ticker)
         return {"forecast": forecast}
     except Exception as e:
         return {"error": str(e)}
