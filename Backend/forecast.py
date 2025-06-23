@@ -36,7 +36,7 @@ def forecast_7_day(ticker):
     last_row = data.iloc[-1].copy()
     forecasts = []
 
-    for i in range(1, 8):
+    for i in range(1, 31):
         future_row = last_row.copy()
         future_row["Days"] += i
         row_features = {col: future_row[col] for col in feature_cols}
