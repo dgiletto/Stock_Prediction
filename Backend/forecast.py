@@ -1,67 +1,42 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
-
-def fetch_stock_data(ticker):
-    data = yf.download(ticker, period="6mo", interval="1d", auto_adjust=True, progress=False)
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
-    data = data[["Open", "High", "Low", "Volume", "Close"]].dropna().reset_index()
-
-    # Basic Features
-    data["Days"] = np.arange(len(data))
-    data["Return"] = data["Close"].pct_change()
-
-    # Technical Features
-    data["MA_5"] = data["Close"].rolling(window=5).mean()
-    data["MA_10"] = data["Close"].rolling(window=10).mean()
-    data["Volatility_5"] = data["Close"].rolling(window=5).std()
-
-    feature_cols = ["Days", "Open", "High", "Low", "Volume", "Return", "MA_5", "MA_10", "Volatility_5"]
-    data = data.dropna(subset=feature_cols).reset_index(drop=True)
-
-    return data
+from sklearn.preprocessing import MinMaxScaler
+from keras import Sequential
+from keras.layers import LSTM, Dense
 
 def forecast_30_day(ticker):
-    data = fetch_stock_data(ticker)
+    df = yf.download(ticker, period="6mo", interval="1d", auto_adjust=True)
+    df = df[["Close"]].dropna()
+    scaler = MinMaxScaler()
+    scaled_data = scaler.fit_transform(df)
 
-    feature_cols = ["Days", "Open", "High", "Low", "Volume", "Return", "MA_5", "MA_10", "Volatility_5"]
-    X = data[feature_cols]
-    y = data["Close"]
+    lookback = 60
+    X, y = [], []
+    for i in range(lookback, len(scaled_data)):
+        X.append(scaled_data[i - lookback:i])
+        y.append(scaled_data[i])
+    X, y = np.array(X), np.array(y)
 
-    model = LinearRegression()
-    model.fit(X, y)
+    model = Sequential()
+    model.add(LSTM(50, return_sequences=True, input_shape=(X.shape[1], 1)))
+    model.add(LSTM(50))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
+    model.fit(X, y, epochs=10, batch_size=16, verbose=0)
 
-    last_row = data.iloc[-1].copy()
-    current_day = int(last_row["Days"])
+    last_60 = scaled_data[-lookback:].reshape(1, lookback, 1)
+    predictions = []
 
-    past_closes = list(data["Close"].tail(10))
-    forecasts = []
-
-    for i in range(1, 31):
-        current_day += 1
-
-        prev_close = past_closes[-1]
-        simulated_close = prev_close + np.random.normal(0, 1)
-        past_closes.append(simulated_close)
-        if len(past_closes) > 10:
-            past_closes.pop(0)
-        
-        future_row = last_row.copy()
-        future_row["Days"] = current_day
-        future_row["Close"] = simulated_close
-        future_row["Return"] = (simulated_close / prev_close) - 1
-        future_row["MA_5"] = np.mean(past_closes[-5:])
-        future_row["MA_10"] = np.mean(past_closes)
-        future_row["Volatility_5"] = np.std(past_closes[-5:])
-
-        row_features = {col: future_row[col] for col in feature_cols}
-        forecasts.append(row_features)
-
+    for _ in range(30):
+        next_pred = model.predict(last_60, verbose=0)[0][0]
+        predictions.append(next_pred)
+        last_60 = np.append(last_60[:, 1:, :], [[[next_pred]]], axis=1)
     
-    X_future = pd.DataFrame(forecasts)
-    y_pred = model.predict(X_future)
+    predicted_prices = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
 
-    return [{"day": int(row["Days"]), "price": round(float(price), 2)}
-        for row, price in zip(X_future.to_dict(orient="records"), y_pred)]
+    start_day = len(df)
+    forecast = [{"day": start_day + i + 1, "price": round(float(price[0]), 2)} for i, price in enumerate(predicted_prices)]
+
+    return forecast
+
