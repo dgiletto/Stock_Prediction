@@ -4,5 +4,5 @@ scikit-learn
 pandas
 numpy
 yfinance
-tensorflow
+tensorflow==2.13.0
 keras
