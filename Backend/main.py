@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from Backend.forecast import forecast_30_day
+from forecast import forecast_30_day
 
 app = FastAPI()
 
