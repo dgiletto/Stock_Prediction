@@ -8,7 +8,7 @@ from keras.layers import LSTM, Dense
 from math import sqrt
 
 def forecast_and_eval(ticker):
-    df = yf.download(ticker, period="6mo", interval="1d", auto_adjust=True)
+    df = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
     df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
     if len(df) < 90:
         raise ValueError("Not enough data to forecast.")

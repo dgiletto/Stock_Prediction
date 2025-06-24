@@ -83,7 +83,7 @@ function App() {
             <ul style={{ paddingLeft: "1rem" }}>
               {forecast.map((f, i) => (
                 <li key={i}>
-                  Day {f.day}: ${f.price}
+                  ${f.price}
                 </li>
               ))}
             </ul>
