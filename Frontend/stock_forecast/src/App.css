@@ -1,38 +1,78 @@
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  padding: 2rem;
+  font-family: sans-serif;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.input-style {
+  color: rgb(36, 35, 42);
+  border-radius: 4px;
+  padding: 8px 16px;
+  border: 2px solid transparent;
+  box-shadow: rgb(0 0 0 / 12%) 0px 1px 3px, rgb(0 0 0 / 24%) 0px 1px 2px;
+  background: rgb(251, 251, 251);
+  padding: 0.5rem;
+  margin-right: 1rem;
+  transition: all 0.1s ease 0s;
+  outline: none
+}
+
+.input-style:focus {
+  border: 2px solid #7c8aff;
+  outline: none;
+}
+
+.submit-btn {
+  background-color: black;
   color: white;
+  border-radius: 8px;
+  border: transparent;
+  height: 30px;
+  transition: ease-in-out 0.3s;
 }
 
-.App-link {
-  color: #61dafb;
+.submit-btn:hover {
+  transition: ease-in-out 0.3s;
+  background-color: #7c8aff;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card-container {
+  margin-top: 2rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  width: 250px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.graph {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  width: 625px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+}
+
+.rmse-val {
+  font-size: 1.5rem;
+  color: #444;
+}
+
+.forecast-list {
+  padding-left: 1rem;
 }
