@@ -14,7 +14,7 @@ function App() {
   const getForecast = async () => {
     try {
       const res = await axios.get(`https://stock-prediction-dr3c.onrender.com/forecast/${ticker}`);
-      const data = res.data;
+      const data = res.data.data;
       if (data.error) {
         setError(data.error)
         return;
