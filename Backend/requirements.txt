@@ -4,4 +4,4 @@ scikit-learn
 pandas
 numpy
 yfinance
-statsmodels
+pmdarima
