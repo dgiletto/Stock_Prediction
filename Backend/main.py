@@ -18,4 +18,5 @@ def get_forecast(ticker: str):
         forecast = forecast_and_eval(ticker)
         return {"data": forecast}
     except Exception as e:
+        print("❌ Error in forecast:", e)
         return {"error": str(e)}

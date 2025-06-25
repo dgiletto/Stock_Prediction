@@ -13,7 +13,7 @@ def get_stock_name(ticker):
         return "Unknown Company"
 
 def generate_suggestion(forecast):
-    prices = [forecast["price"] for day in forecast]
+    prices = [day["price"] for day in forecast]
     start = prices[0]
     end = prices[-1]
     change = ((end - start) / start) * 100
