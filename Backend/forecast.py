@@ -7,6 +7,13 @@ from keras import Sequential
 from keras.layers import LSTM, Dense
 from math import sqrt
 
+def get_stock_name(ticker):
+    try:
+        info = yf.Ticker(ticker).info
+        return info.get("longName", "Unknown Company")
+    except Exception as e:
+        return "Unknown Company"
+
 def forecast_and_eval(ticker):
     df = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
     df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
@@ -75,5 +82,6 @@ def forecast_and_eval(ticker):
         "rmse": round(rmse, 2),
         "forecast": forecast,
         "y_pred": [round(p, 2) for p in y_pred_actual.tolist()],
-        "y_true": [round(t, 2) for t in y_true_actual.tolist()]
+        "y_true": [round(t, 2) for t in y_true_actual.tolist()],
+        "name": get_stock_name(ticker)
     }

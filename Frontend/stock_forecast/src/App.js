@@ -8,11 +8,14 @@ function App() {
   const [forecast, setForecast] = useState([]);
   const [error, setError] = useState('');
   const [rmse, setRmse] = useState(null);
-  const [yTrue, setYTrue] = useState([])
-  const [yPred, setYPred] = useState([])
+  const [yTrue, setYTrue] = useState([]);
+  const [yPred, setYPred] = useState([]);
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
 
 
   const getForecast = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`https://stock-prediction-dr3c.onrender.com/forecast/${ticker}`);
       const data = res.data.data;
@@ -24,10 +27,12 @@ function App() {
       setRmse(data.rmse);
       setYTrue(data.y_true);
       setYPred(data.y_pred);
+      setName(data.name);
       setError('');
     } catch (err) {
       setError('Server error');
     }
+    setLoading(false);
   };
 
   const predictionData = yTrue.map((trueVal, i) => ({
@@ -51,11 +56,17 @@ function App() {
         <button className="submit-btn" onClick={getForecast}>Get Forecast</button>
       </div>
 
+      {loading && (
+        <div className="loading-bar-container">
+          <div className="spinner" />
+        </div>
+      )}
+
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {yTrue.length > 0 && (
         <div className="graph">
-          <h3>{ticker} Model Accuracy</h3>
+          <h3>{name} Model Accuracy</h3>
           <LineChart width={600} height={300} data={predictionData}>
             <CartesianGrid stroke="#ccc" />
             <XAxis dataKey="index" />
