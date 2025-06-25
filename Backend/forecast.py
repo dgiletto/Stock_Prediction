@@ -53,10 +53,10 @@ def forecast_and_eval(ticker):
     y_train, y_test = y[:split], y[split:]
 
     # LSTM Model
-    model = Sequential()
-    model.add(LSTM(64, return_sequences=True, input_shape=(lookback, len(feature_cols))))
-    model.add(LSTM(32))
-    model.add(Dense(1))
+    model = Sequential([
+        LSTM(32, return_sequences=True, input_shape=(lookback, len(feature_cols))),
+        Dense(1)
+    ])
     model.compile(optimizer='adam', loss='mse')
     model.fit(X_train, y_train, epochs=10, batch_size=16, verbose=0)
 
