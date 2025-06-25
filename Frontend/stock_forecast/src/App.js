@@ -11,6 +11,8 @@ function App() {
   const [yTrue, setYTrue] = useState([]);
   const [yPred, setYPred] = useState([]);
   const [name, setName] = useState('');
+  const [suggestion, setSuggestion] = useState('');
+  const [change, setChange] = useState(null);
   const [loading, setLoading] = useState(false);
 
 
@@ -28,6 +30,8 @@ function App() {
       setYTrue(data.y_true);
       setYPred(data.y_pred);
       setName(data.name);
+      setSuggestion(data.suggestion);
+      setChange(data.return);
       setError('');
     } catch (err) {
       setError('Server error');
@@ -97,6 +101,26 @@ function App() {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Suggestion Card */}
+          <div className="card">
+            <h4>Investment Suggestion</h4>
+              <p
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color:
+                  suggestion === 'Buy'
+                    ? 'green'
+                    : suggestion === 'Sell'
+                    ? 'red'
+                    : '#888',
+              }}
+            >
+              {suggestion} ({change > 0 ? '+' : ''}
+              {change}%) 
+            </p>
           </div>
         </div>
       )}

@@ -14,6 +14,19 @@ def get_stock_name(ticker):
     except Exception as e:
         return "Unknown Company"
 
+def generate_suggestion(forecast):
+    prices = [forecast["price"] for day in forecast]
+    start = prices[0]
+    end = prices[-1]
+    change = ((end - start) / start) * 100
+
+    if change > 2:
+        return "Buy", round(change, 2)
+    elif change < -2:
+        return "Sell", round(change, 2)
+    else:
+        return "Hold", round(change, 2)
+
 def forecast_and_eval(ticker):
     df = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
     df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
@@ -78,10 +91,14 @@ def forecast_and_eval(ticker):
 
     forecast = [{"day": len(df) + i + 1, "price": round(float(p), 2)} for i, p in enumerate(forecast_close)]
 
+    suggestion, change = generate_suggestion(forecast)
+
     return {
         "rmse": round(rmse, 2),
         "forecast": forecast,
         "y_pred": [round(p, 2) for p in y_pred_actual.tolist()],
         "y_true": [round(t, 2) for t in y_true_actual.tolist()],
-        "name": get_stock_name(ticker)
+        "name": get_stock_name(ticker),
+        "suggestion": suggestion,
+        "return": change
     }
