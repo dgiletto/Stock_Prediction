@@ -4,4 +4,5 @@ scikit-learn
 pandas
 numpy==1.24.4
 yfinance
-pmdarima==2.0.4
+tensorflow
+keras
