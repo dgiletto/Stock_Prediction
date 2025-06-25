@@ -27,12 +27,15 @@ def generate_suggestion(forecast):
 
 def forecast_and_eval(ticker):
     df = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
-    df = df[["Close"]].dropna()
 
-    if len(df) < 90:
-        raise ValueError("Not enough data to forecast.")
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df["Close"][ticker]
+    else:
+        df = df["Close"]
+    
+    df = df.dropna()
 
-    close_prices = df["Close"]
+    close_prices = df.squeeze()
     train_size = int(len(close_prices) * 0.8)
     train, test = close_prices[:train_size], close_prices[train_size:]
 
