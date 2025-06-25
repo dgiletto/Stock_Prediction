@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-from statsmodels.tsa.arima.model import ARIMA
+from pmdarima import auto_arima
 
 def get_stock_name(ticker):
     try:
@@ -39,17 +39,21 @@ def forecast_and_eval(ticker):
     train_size = int(len(close_prices) * 0.8)
     train, test = close_prices[:train_size], close_prices[train_size:]
 
-    # Fit ARIMA model (you can tune order)
-    model = ARIMA(train, order=(5, 1, 0))
-    model_fit = model.fit()
+    model = auto_arima(train,
+                       start_p=0, max_p=5,
+                       start_q=0, max_q=5,
+                       seasonal=False,
+                       stepwise=True,
+                       suppress_warnings=True,
+                       error_action='ignore')
 
     # Predict on test set
-    forecast_test = model_fit.forecast(steps=len(test))
+    forecast_test = model.predict(n_periods=len(test))
     rmse = sqrt(mean_squared_error(test, forecast_test))
 
     # Forecast next 7 days
-    final_model = ARIMA(close_prices, order=(5, 1, 0)).fit()
-    forecast_7d = final_model.forecast(steps=7)
+    model.update(close_prices)
+    forecast_7d = model.predict(n_periods=7)
     forecast = [{"day": len(df) + i + 1, "price": round(float(p), 2)} for i, p in enumerate(forecast_7d)]
 
     suggestion, change = generate_suggestion(forecast)
