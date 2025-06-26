@@ -112,7 +112,7 @@ function App() {
             <ul className="forecast-list">
               {forecast.map((f, i) => (
                 <li key={i}>
-                  ${f.price}
+                  $ {f.price}
                 </li>
               ))}
             </ul>
@@ -142,16 +142,14 @@ function App() {
 
       {forecast.length > 0 && (
         <div className="graph">
-          <h3>7-Day Forecast with Confidence Interval</h3>
+          <h3>7-Day Forecast Graph</h3>
           <LineChart width={600} height={300} data={forecast}>
             <CartesianGrid stroke="#ccc" />
             <XAxis dataKey="day" label={{ value: 'Day', position: 'insideBottomRight', offset: -5 }} />
-            <YAxis domain={['dataMin - 10', 'dataMin + 10']}/>
+            <YAxis domain={['dataMin - 5', 'dataMin + 5']}/>
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="price" stroke="#007bff" dot={false} name="Forecast" />
-            <Line type="monotone" dataKey="upper" stroke="#28a745" dot={false} strokeDasharray="3 3" name="Upper CI" />
-            <Line type="monotone" dataKey="lower" stroke="#dc3545" dot={false} strokeDasharray="3 3" name="Lower CI" />
+            <Line type="monotone" dataKey="price" stroke="#007bff" strokeWidth={2} dot={false} name="Forecast" />
           </LineChart>
         </div>
       )}
