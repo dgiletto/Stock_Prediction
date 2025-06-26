@@ -49,9 +49,9 @@ function App() {
 
   return (
     <div className="App">
-      <h2>Stock Forecast Accuracy</h2>
+      <h2 className="app-title">Stock Forecast Accuracy</h2>
 
-      <div clasName="input-group">
+      <div className="input-group">
         <input
           type="text"
           value={ticker}
@@ -122,16 +122,13 @@ function App() {
           <div className="card">
             <h4>📈 Investment Suggestion</h4>
               <p
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color:
-                  suggestion === 'Buy'
-                    ? 'green'
-                    : suggestion === 'Sell'
-                    ? 'red'
-                    : '#f1c40f',
-              }}
+              className={`suggestion-text ${
+                suggestion === "Buy"
+                  ? "buy"
+                  : suggestion === "Sell"
+                  ? "sell"
+                  : "hold"
+              }`}
             >
               {suggestion} ({change > 0 ? '+' : ''}
               {change}%) 
