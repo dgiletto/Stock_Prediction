@@ -108,14 +108,15 @@
 /* Sidebar */
 .sidebar {
   position: absolute;
-  left: 0;
+  left: 10px;
   top: 100px;
   width: 250px;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-right: 1px solid #ddd;
-  height: calc(100vh - 100px);
+  height: 400px;
   overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar h3 {
