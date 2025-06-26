@@ -45,27 +45,23 @@ def generate_suggestion(forecast):
         return "Hold", round(change, 2)
 
 def forecast_and_eval(ticker):
-    df = yf.download(ticker, period="2y", interval="1d", auto_adjust=True)
+    df = yf.download(ticker, period="1y", interval="1d", auto_adjust=True)
     df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
     if len(df) < 90:
         raise ValueError("Not enough data to forecast.")
 
     feature_cols = ["Open", "High", "Low", "Close", "Volume"]
 
-    # Scale Input Features
+    # Scale data
     scaler = MinMaxScaler()
     scaled_data = scaler.fit_transform(df[feature_cols])
-
-    # Scale Close Seperately
-    close_scaler = MinMaxScaler()
-    scaled_close = close_scaler.fit_transform(df[["Close"]])
 
     # Create sequences
     lookback = 60
     X, y = [], []
     for i in range(lookback, len(scaled_data)):
         X.append(scaled_data[i - lookback:i])
-        y.append(scaled_close[i])
+        y.append(scaled_data[i][3])  # Close is at index 3
     X, y = np.array(X), np.array(y)
 
     # Train Test Split
@@ -75,43 +71,67 @@ def forecast_and_eval(ticker):
 
     # LSTM Model
     model = Sequential([
-        LSTM(64, return_sequences=True, input_shape=(lookback, len(feature_cols))),
-        GaussianNoise(0.01),
-        Dropout(0.2),
-        LSTM(32),
+        LSTM(32, return_sequences=False, input_shape=(lookback, len(feature_cols))),
         Dropout(0.2),
         Dense(1)
     ])
     model.compile(optimizer='adam', loss='mse')
-
-    # Train with early stop
-    early_stop = EarlyStopping(patience=5, restore_best_weights=True)
-    model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0, validation_split=0.1, callbacks=[early_stop])
+    model.fit(X_train, y_train, epochs=10, batch_size=16, verbose=0)
 
     # Predict test
     y_pred_scaled = model.predict(X_test, verbose=0)
-    y_pred_actual = close_scaler.inverse_transform(y_pred_scaled).flatten()
-    y_true_actual = close_scaler.inverse_transform(y_test).flatten()
+
+    # Inverse transform test predictions
+    dummy_pred = np.zeros((len(y_pred_scaled), len(feature_cols)))
+    dummy_true = np.zeros((len(y_test), len(feature_cols)))
+    dummy_pred[:, 3] = y_pred_scaled.squeeze()
+    dummy_true[:, 3] = y_test.squeeze()
+
+    y_pred_actual = scaler.inverse_transform(dummy_pred)[:, 3]
+    y_true_actual = scaler.inverse_transform(dummy_true)[:, 3]
     rmse = sqrt(mean_squared_error(y_true_actual, y_pred_actual))
 
     # Forecast 7 future days
-    last_seq = scaled_data[-lookback:]
-    predictions = []
+    num_samples = 100  # Number of Monte Carlo runs
+    future_preds = []
 
-    for _ in range(7):
-        input_seq = last_seq.reshape(1, lookback, len(feature_cols))
-        pred_scaled = float(model.predict(input_seq, verbose=0).squeeze())
+    for _ in range(num_samples):
+        last_seq = scaled_data[-lookback:]
+        preds = []
+        for _ in range(7):
+            input_seq = last_seq.reshape(1, lookback, len(feature_cols))
+            pred_scaled = float(model(input_seq, training=True).numpy().squeeze())
+            new_row = last_seq[-1].copy()
+            new_row[3] = pred_scaled
+            last_seq = np.vstack([last_seq[1:], new_row])
+            preds.append(pred_scaled)
+        future_preds.append(preds)
 
-        new_row = last_seq[-1].copy()
-        new_row[3] = pred_scaled
-        last_seq = np.vstack([last_seq[1:], new_row])
+    future_preds = np.array(future_preds)
+    means = np.mean(future_preds, axis=0)
+    stds = np.std(future_preds, axis=0)
 
-        dummy = np.zeros((1, len(feature_cols)))
-        dummy[0, 3] = pred_scaled
-        forecast_price = float(close_scaler.inverse_transform(dummy)[0, 0])
-        predictions.append(round(forecast_price, 2))
-    
-    forecast = [{"day": len(df) + i + 1, "price": p} for i, p in enumerate(predictions)]
+    # Inverse scale
+    dummy_forecast = np.zeros((7, len(feature_cols)))
+    forecast = []
+
+    for i in range(7):
+        dummy_forecast[:, :] = 0  # Reset for each day
+        dummy_forecast[i, 3] = means[i]
+        mean_inv = scaler.inverse_transform(dummy_forecast)[i, 3]
+        
+        dummy_forecast[i, 3] = means[i] + 1.96 * stds[i]
+        upper = scaler.inverse_transform(dummy_forecast)[i, 3]
+        
+        dummy_forecast[i, 3] = means[i] - 1.96 * stds[i]
+        lower = scaler.inverse_transform(dummy_forecast)[i, 3]
+
+        forecast.append({
+            "day": len(df) + i + 1,
+            "price": round(mean_inv, 2),
+            "upper": round(upper, 2),
+            "lower": round(lower, 2),
+        })
 
     suggestion, change = generate_suggestion(forecast)
 

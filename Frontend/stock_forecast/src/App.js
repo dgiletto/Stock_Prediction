@@ -149,6 +149,8 @@ function App() {
             <YAxis domain={['dataMin - 5', 'dataMin + 5']}/>
             <Tooltip />
             <Legend />
+            <Line type="monotone" dataKey="upper" stroke="#28a745" dot={false} strokeDasharray="3 3" name="Upper CI" />
+            <Line type="monotone" dataKey="lower" stroke="#dc3545" dot={false} strokeDasharray="3 3" name="Lower CI" />
             <Line type="monotone" dataKey="price" stroke="#007bff" strokeWidth={2} dot={false} name="Forecast" />
           </LineChart>
         </div>
