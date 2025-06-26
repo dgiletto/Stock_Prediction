@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-from pmdarima import auto_arima
+from keras.layers import LSTM, Dense
+from keras import Sequential
 
 def get_stock_name(ticker):
     try:
