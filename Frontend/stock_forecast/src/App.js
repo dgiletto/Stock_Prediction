@@ -13,6 +13,7 @@ function App() {
   const [name, setName] = useState('');
   const [suggestion, setSuggestion] = useState('');
   const [change, setChange] = useState(null);
+  const [stockInfo, setStockInfo] = useState({});
   const [loading, setLoading] = useState(false);
 
 
@@ -32,6 +33,7 @@ function App() {
       setName(data.name);
       setSuggestion(data.suggestion);
       setChange(data.return);
+      setStockInfo(data.stock_info);
       setError('');
     } catch (err) {
       setError('Server error');
@@ -68,6 +70,19 @@ function App() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      {Object.keys(stockInfo).length > 0 && (
+        <div className="sidebar">
+          <h3>Stock Information</h3>
+          <ul>
+            {Object.entries(stockInfo).map(([key, value]) => (
+              <li key={key}>
+                <strong>{key}: </strong> {value ? value.toLocaleString() : 'N/A'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {yTrue.length > 0 && (
         <div className="graph">
           <h3>{name} Model Accuracy</h3>
@@ -87,13 +102,13 @@ function App() {
         <div className="card-container">
           {/* RMSE Card */}
           <div className="card">
-            <h4>Model RMSE</h4>
+            <h4>📊 Model RMSE</h4>
             <p className="rmse-val">{rmse}</p>
           </div>
 
           {/* Forecast Card */}
           <div className="card">
-            <h4>7-Day Forecast</h4>
+            <h4>💲7-Day Forecast</h4>
             <ul className="forecast-list">
               {forecast.map((f, i) => (
                 <li key={i}>
@@ -105,7 +120,7 @@ function App() {
 
           {/* Suggestion Card */}
           <div className="card">
-            <h4>Investment Suggestion</h4>
+            <h4>📈 Investment Suggestion</h4>
               <p
               style={{
                 fontSize: '1.5rem',
@@ -115,7 +130,7 @@ function App() {
                     ? 'green'
                     : suggestion === 'Sell'
                     ? 'red'
-                    : '#FFFF8F',
+                    : '#f1c40f',
               }}
             >
               {suggestion} ({change > 0 ? '+' : ''}

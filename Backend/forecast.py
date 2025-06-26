@@ -2,39 +2,10 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error
-from math import sqrt
-from keras.layers import LSTM, Dense
-from keras import Sequential
-
-def get_stock_name(ticker):
-    try:
-        info = yf.Ticker(ticker).info
-        return info.get("longName", "Unknown Company")
-    except Exception as e:
-        return "Unknown Company"
-
-def generate_suggestion(forecast):
-    prices = [day["price"] for day in forecast]
-    start = prices[0]
-    end = prices[-1]
-    change = ((end - start) / start) * 100
-
-    if change > 2:
-        return "Buy", round(change, 2)
-    elif change < -2:
-        return "Sell", round(change, 2)
-    else:
-        return "Hold", round(change, 2)
-
-def forecast_and_eval(ticker):
-    import yfinance as yf
-import pandas as pd
-import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from keras import Sequential
-from keras.layers import LSTM, Dense
 from math import sqrt
+from keras.layers import LSTM, Dense
+from keras import Sequential
 
 def get_stock_name(ticker):
     try:
@@ -42,6 +13,22 @@ def get_stock_name(ticker):
         return info.get("longName", "Unknown Company")
     except Exception as e:
         return "Unknown Company"
+
+def get_stock_info(ticker):
+    try:
+        info = yf.Ticker(ticker).info
+        return {
+            "Volume": info.get("volume"),
+            "Open": info.get("open"),
+            "High Today": info.get("dayHigh"),
+            "Low Today": info.get("dayLow"),
+            "Market Cap": info.get("marketCap"),
+            "52 Week High": info.get("fiftyTwoWeekHigh"),
+            "52 Week Low": info.get("fiftyTwoWeekLow"),
+            "P/E Ratio": info.get("trailingPE")
+        }
+    except Exception:
+        return {}
 
 def generate_suggestion(forecast):
     prices = [day["price"] for day in forecast]
@@ -129,5 +116,6 @@ def forecast_and_eval(ticker):
         "y_true": [round(t, 2) for t in y_true_actual.tolist()],
         "name": get_stock_name(ticker),
         "suggestion": suggestion,
-        "return": change
+        "return": change,
+        "stock_info": get_stock_info(ticker)
     }
