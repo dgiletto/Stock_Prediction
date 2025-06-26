@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 from math import sqrt
-from keras.layers import LSTM, Dense
+from keras.layers import LSTM, Dense, Dropout
 from keras import Sequential
 
 def get_stock_name(ticker):
@@ -71,6 +71,7 @@ def forecast_and_eval(ticker):
     # LSTM Model
     model = Sequential([
         LSTM(32, return_sequences=False, input_shape=(lookback, len(feature_cols))),
+        Dropout(0.2),
         Dense(1)
     ])
     model.compile(optimizer='adam', loss='mse')
@@ -90,22 +91,46 @@ def forecast_and_eval(ticker):
     rmse = sqrt(mean_squared_error(y_true_actual, y_pred_actual))
 
     # Forecast 7 future days
-    last_seq = scaled_data[-lookback:]
-    predictions = []
-    for _ in range(7):
-        input_seq = last_seq.reshape(1, lookback, len(feature_cols))
-        pred_scaled = float(model.predict(input_seq, verbose=0).squeeze())
-        new_row = last_seq[-1].copy()
-        new_row[3] = pred_scaled
-        last_seq = np.vstack([last_seq[1:], new_row])
-        predictions.append(pred_scaled)
+    num_samples = 100  # Number of Monte Carlo runs
+    future_preds = []
 
-    # Inverse scale forecasted close prices
+    for _ in range(num_samples):
+        last_seq = scaled_data[-lookback:]
+        preds = []
+        for _ in range(7):
+            input_seq = last_seq.reshape(1, lookback, len(feature_cols))
+            pred_scaled = float(model(input_seq, training=True).numpy().squeeze())
+            new_row = last_seq[-1].copy()
+            new_row[3] = pred_scaled
+            last_seq = np.vstack([last_seq[1:], new_row])
+            preds.append(pred_scaled)
+        future_preds.append(preds)
+
+    future_preds = np.array(future_preds)
+    means = np.mean(future_preds, axis=0)
+    stds = np.std(future_preds, axis=0)
+
+    # Inverse scale
     dummy_forecast = np.zeros((7, len(feature_cols)))
-    dummy_forecast[:, 3] = predictions
-    forecast_close = scaler.inverse_transform(dummy_forecast)[:, 3]
+    forecast = []
 
-    forecast = [{"day": len(df) + i + 1, "price": round(float(p), 2)} for i, p in enumerate(forecast_close)]
+    for i in range(7):
+        dummy_forecast[:, :] = 0  # Reset for each day
+        dummy_forecast[i, 3] = means[i]
+        mean_inv = scaler.inverse_transform(dummy_forecast)[i, 3]
+        
+        dummy_forecast[i, 3] = means[i] + 1.96 * stds[i]
+        upper = scaler.inverse_transform(dummy_forecast)[i, 3]
+        
+        dummy_forecast[i, 3] = means[i] - 1.96 * stds[i]
+        lower = scaler.inverse_transform(dummy_forecast)[i, 3]
+
+        forecast.append({
+            "day": len(df) + i + 1,
+            "price": round(mean_inv, 2),
+            "upper": round(upper, 2),
+            "lower": round(lower, 2),
+        })
 
     suggestion, change = generate_suggestion(forecast)
 
