@@ -115,7 +115,7 @@ function App() {
                     ? 'green'
                     : suggestion === 'Sell'
                     ? 'red'
-                    : '#888',
+                    : '#FFFF8F',
               }}
             >
               {suggestion} ({change > 0 ? '+' : ''}

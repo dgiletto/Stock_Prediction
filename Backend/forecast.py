@@ -44,7 +44,7 @@ def get_stock_name(ticker):
         return "Unknown Company"
 
 def generate_suggestion(forecast):
-    prices = [forecast["price"] for day in forecast]
+    prices = [day["price"] for day in forecast]
     start = prices[0]
     end = prices[-1]
     change = ((end - start) / start) * 100
@@ -83,7 +83,7 @@ def forecast_and_eval(ticker):
 
     # LSTM Model
     model = Sequential([
-        LSTM(32, return_sequences=True, input_shape=(lookback, len(feature_cols))),
+        LSTM(32, return_sequences=False, input_shape=(lookback, len(feature_cols))),
         Dense(1)
     ])
     model.compile(optimizer='adam', loss='mse')
@@ -95,8 +95,8 @@ def forecast_and_eval(ticker):
     # Inverse transform test predictions
     dummy_pred = np.zeros((len(y_pred_scaled), len(feature_cols)))
     dummy_true = np.zeros((len(y_test), len(feature_cols)))
-    dummy_pred[:, 3] = y_pred_scaled[:, 0]
-    dummy_true[:, 3] = y_test
+    dummy_pred[:, 3] = y_pred_scaled.squeeze()
+    dummy_true[:, 3] = y_test.squeeze()
 
     y_pred_actual = scaler.inverse_transform(dummy_pred)[:, 3]
     y_true_actual = scaler.inverse_transform(dummy_true)[:, 3]
